@@ -16,7 +16,7 @@
 
 # RStudio files
 .Rproj.user/
-
+.bash_history
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf

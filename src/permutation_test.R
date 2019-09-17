@@ -1,6 +1,3 @@
-install.packages("pracma")
-install.packages("kernlab")
-
 library(dplyr)
 library(caret)
 library(pracma)
@@ -9,17 +6,15 @@ library(lattice)
 library(foreach)
 library(doParallel)
 
-test = c("counts_mauratus_liver", "counts_mauratus_kidney",
-"counts_fdamarensis_brain", "counts_fdamarensis_kidney",
-"counts_fdamarensis_liver", "counts_uamericanus_liver", "counts_uamericanus_kidney",
-"counts_uamericanus_brain", "counts_hsapiens_liver",
-"counts_hsapiens_kidney", "counts_hsapiens_heart",
-"counts_hsapiens_lung")
-
 # wd is working directory
 # dw is download directory
 
-permutation_test <- function(wd, dw, samples, tries = 10){
+permutation_test <- function(wd, dw, samples, tries = 10, cores = 28){
+  
+  deps <- c('dplyr', 'caret', 'pracma', 'kernlab', 'lattice')
+  
+  #cl <- parallel::makeCluster(cores)
+  #doParallel::registerDoParallel(cl)
 
 	setwd(wd)
 
@@ -47,10 +42,19 @@ permutation_test <- function(wd, dw, samples, tries = 10){
 	names(c_train) <- c("lifespan")
 	rownames(c_train) <- rownames(z_train)
 
-	cl <- parallel::makeCluster(28)
+	cl <- parallel::makeCluster(cores)
 	doParallel::registerDoParallel(cl)
 	
-	foreach(counter = 1:tries, .combine = 'c') %dopar %{
+	library(dplyr)
+	library(caret)
+	library(pracma)
+	library(kernlab)
+	library(lattice)
+	library(foreach)
+	library(doParallel)
+	
+	
+	foreach(counter = 1:tries, .combine = 'c', .packages=deps) %dopar%{
 		
 		list_ranks <- data.frame(cluster_color = character(), signature = character(), r2_svm = numeric(), sigma = numeric(), C = numeric())
 
@@ -91,3 +95,14 @@ permutation_test <- function(wd, dw, samples, tries = 10){
 	parallel::stopCluster(cl)
 
 }
+
+samples = c("counts_mauratus_liver", "counts_mauratus_kidney",
+         "counts_fdamarensis_brain", "counts_fdamarensis_kidney",
+         "counts_fdamarensis_liver", "counts_uamericanus_liver", "counts_uamericanus_kidney",
+         "counts_uamericanus_brain", "counts_hsapiens_liver",
+         "counts_hsapiens_kidney", "counts_hsapiens_heart",
+         "counts_hsapiens_lung")
+data = "/home/rstudio/DESeq2_preprocessing"
+output = "/data/results/cross-species"
+tries = 10
+permutation_test(data, output, samples, tries)
